@@ -1,0 +1,40 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment & IDE
+.venv/
+env/
+venv/
+.env
+.DS_Store
+.idea/
+.vscode/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build & packaging
+build/
+dist/
+*.egg-info/
+
+# Raw large cache (sidecar JSON metadata should be kept, raw large binaries ignored)
+data/raw/*.bin
+data/interim/*
+!data/interim/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# LaTeX build artifacts
+report/*.aux
+report/*.log
+report/*.out
+report/*.bbl
+report/*.blg
+report/*.synctex.gz
+report/*.toc

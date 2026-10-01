@@ -1,0 +1,32 @@
+{
+  "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfst_r_lfu3rt?geo=EL30&geo=EL41&geo=EL42&geo=EL43&geo=EL51&geo=EL52&geo=EL53&geo=EL54&geo=EL61&geo=EL62&geo=EL63&geo=EL64&geo=EL65&unit=PC&sex=T&age=Y15-74&isced11=TOTAL&sinceTimePeriod=2018",
+  "requested_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfst_r_lfu3rt",
+  "params": {
+    "geo": [
+      "EL30",
+      "EL41",
+      "EL42",
+      "EL43",
+      "EL51",
+      "EL52",
+      "EL53",
+      "EL54",
+      "EL61",
+      "EL62",
+      "EL63",
+      "EL64",
+      "EL65"
+    ],
+    "unit": "PC",
+    "sex": "T",
+    "age": "Y15-74",
+    "isced11": "TOTAL",
+    "sinceTimePeriod": 2018
+  },
+  "retrieved_at": "2026-10-01T14:44:38.587315+00:00",
+  "status": 200,
+  "content_type": "application/json",
+  "sha256": "e803814e86b1ea57a1572c70a969b973a153a36aebe5453b3e1dc4c1ed473bb3",
+  "bytes": 5161,
+  "licence": "CC BY 4.0 (Eurostat Open Data)"
+}

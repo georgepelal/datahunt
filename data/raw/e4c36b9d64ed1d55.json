@@ -1,0 +1,29 @@
+{
+  "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/nama_10r_2gdp?geo=EL30&geo=EL41&geo=EL42&geo=EL43&geo=EL51&geo=EL52&geo=EL53&geo=EL54&geo=EL61&geo=EL62&geo=EL63&geo=EL64&geo=EL65&unit=MIO_EUR&sinceTimePeriod=2018",
+  "requested_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/nama_10r_2gdp",
+  "params": {
+    "geo": [
+      "EL30",
+      "EL41",
+      "EL42",
+      "EL43",
+      "EL51",
+      "EL52",
+      "EL53",
+      "EL54",
+      "EL61",
+      "EL62",
+      "EL63",
+      "EL64",
+      "EL65"
+    ],
+    "unit": "MIO_EUR",
+    "sinceTimePeriod": 2018
+  },
+  "retrieved_at": "2026-10-01T14:45:34.324974+00:00",
+  "status": 200,
+  "content_type": "application/json",
+  "sha256": "75a1585af71b4a0c9cb3837aaa9ef6537dd29bac2f489e3d5a192733385b8d96",
+  "bytes": 4457,
+  "licence": "CC BY 4.0 (Eurostat Open Data)"
+}

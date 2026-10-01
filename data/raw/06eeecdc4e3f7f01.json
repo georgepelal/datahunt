@@ -1,0 +1,16 @@
+{
+  "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfst_r_lfu3rt?geo=EL&unit=PC_ACT&sex=T&age=Y15-74",
+  "requested_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfst_r_lfu3rt",
+  "params": {
+    "geo": "EL",
+    "unit": "PC_ACT",
+    "sex": "T",
+    "age": "Y15-74"
+  },
+  "retrieved_at": "2026-10-01T14:40:50.101047+00:00",
+  "status": 200,
+  "content_type": "application/json",
+  "sha256": "b17f415aa4e8f42d670b7088431e2dc6af1d911b4274eba9b87222e5e1b1a7a1",
+  "bytes": 4386,
+  "licence": "CC BY 4.0 (Eurostat Open Data)"
+}

@@ -1,0 +1,58 @@
+\documentclass[11pt,a4paper]{article}
+% For a Greek report: compile with XeLaTeX and use
+%   \usepackage{fontspec}\setmainfont{Noto Serif}\usepackage{polyglossia}\setmainlanguage{greek}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx,booktabs,amsmath,xcolor}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\title{Data Extraction for Machine Learning:\\ Methods, Sources and Pitfalls\\[4pt]
+       \large Programming Project P1 --- DataHunt (Track: \textit{GovAI})}
+\author{Student A \and Student B \and Student C\\ \small ECE 461, University of Thessaly}
+\date{\today}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+One paragraph: the problem, the sources used (including Eurostat and one unstructured source),
+the pipeline, the baseline result, and the main lesson about data extraction.
+\end{abstract}
+
+\section{Introduction}
+Data acquisition is the first stage of every ML project~\citep{roh2021survey}; errors made here
+propagate downstream as ``data cascades''~\citep{sambasivan2021cascades}.
+
+\section{Background and Related Work}
+Survey extraction methods. Compare them in Table~\ref{tab:methods}.
+\begin{table}[h]\centering\small
+\caption{Data extraction methods compared.}\label{tab:methods}
+\begin{tabular}{@{}lllll@{}}\toprule
+Method & Stability & Effort & Legal risk & Typical format\\\midrule
+File download & high & low & low & CSV, Parquet\\
+REST / SDMX API & high & low--medium & low & JSON, SDMX, JSON-stat\\
+Web scraping & low & medium--high & medium--high & HTML\\
+Document parsing & medium & medium & depends & PDF, DOCX\\
+Media collection & medium & high & high (copyright, GDPR) & JPG, WAV\\\bottomrule
+\end{tabular}\end{table}
+
+\section{Legal and Ethical Framework}
+Licences, GDPR, the Open Data Directive~\citep{eu2019opendata}, the AI Act~\citep{eu2024aiact}.
+
+\section{Case Study: Our Pipeline}
+Architecture figure, sources table, provenance design following FAIR~\citep{wilkinson2016fair},
+tidy data~\citep{wickham2014tidy}, Eurostat API~\citep{eurostat_api}.
+
+\section{From Data to a Baseline Model}
+\section{Data Quality and Threats to Validity}
+Discuss dataset documentation~\citep{gebru2021datasheets} and dataset practice~\citep{paullada2021data}.
+\section{Conclusions}
+
+\appendix
+\section{Datasheet}
+\section{AI-use Statement}
+State which AI tools were used, for what, and how every generated claim and reference was verified.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}
