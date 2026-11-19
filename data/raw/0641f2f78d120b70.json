@@ -1,0 +1,14 @@
+{
+  "url": "https://diavgeia.gov.gr/opendata/search.json?size=100&page=2",
+  "requested_url": "https://diavgeia.gov.gr/opendata/search.json",
+  "params": {
+    "size": 100,
+    "page": 2
+  },
+  "retrieved_at": "2026-10-02T15:53:56.016179+00:00",
+  "status": 200,
+  "content_type": "application/json; charset=UTF-8",
+  "sha256": "1244d98ee69ab07f3c34a2d18db41207664f7a5ec4037aefdde81ffc9334aa15",
+  "bytes": 112178,
+  "licence": "CC BY 4.0 (Diavgeia Open Governance / PSI Directive 2019/1024)"
+}

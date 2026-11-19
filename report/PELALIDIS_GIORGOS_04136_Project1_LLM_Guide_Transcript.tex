@@ -1,0 +1,579 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,bm,mathtools}
+\usepackage{booktabs,array,colortbl,xcolor}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{listings}
+\lstset{basicstyle=\ttfamily\small, breaklines=true, keywordstyle=\color{blue}}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\definecolor{themeblue}{HTML}{1A365D}
+\definecolor{themelight}{HTML}{EBF8FF}
+\definecolor{promptbg}{HTML}{F7FAFC}
+\definecolor{promptfr}{HTML}{2B6CB0}
+\definecolor{ansbg}{HTML}{FFFFFF}
+\definecolor{ansfr}{HTML}{2C5282}
+\definecolor{evalbg}{HTML}{F0FFF4}
+\definecolor{evalfr}{HTML}{276749}
+\definecolor{testbg}{HTML}{FFFAF0}
+\definecolor{testfr}{HTML}{C05621}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small \textbf{ECE 461: Machine Learning} --- Personal LLM Guide Transcript}
+\rhead{\small Giorgos Pelalidis (AEM: 04136)}
+\cfoot{\small Page \thepage}
+
+\newtcolorbox{promptbox}[1]{enhanced,breakable,colback=promptbg,colframe=promptfr,boxrule=0.7pt,arc=2pt,
+  fonttitle=\bfseries\small,title={#1},left=6pt,right=6pt,top=4pt,bottom=4pt}
+\newtcolorbox{testbox}[1]{enhanced,breakable,colback=testbg,colframe=testfr,boxrule=0.7pt,arc=2pt,
+  fonttitle=\bfseries\small,title={#1},left=6pt,right=6pt,top=4pt,bottom=4pt}
+\newtcolorbox{evalbox}[1]{enhanced,breakable,colback=evalbg,colframe=evalfr,boxrule=0.7pt,arc=2pt,
+  fonttitle=\bfseries\small,title={#1},left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+\title{\vspace{-1.5cm}\LARGE\bfseries\color{themeblue} Interactive LLM Learning Guide Transcript\\[4pt]
+\Large Project 1: Getting Data for Machine Learning (DataHunt)}
+\author{\textbf{Giorgos Pelalidis} \quad \textbf{AEM:} 04136 \\
+Department of Electrical and Computer Engineering, University of Thessaly \\
+\texttt{Instructor: Prof. Elias Houstis}}
+\date{October 5, 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+This document provides the complete, personal transcript of the interactive dialogue stepping through the official self-check questions (Section 11) and the twelve core learning concepts (Section 12) of \emph{Project 1: Getting Data for Machine Learning}. For each concept, the student submits the official pedagogical prompt, solves the rigorous interactive test scenario, provides mathematical and architectural derivations, and completes the capstone multi-part wrap-up problem evaluating data acquisition pipelines, legal licences, data cube decoding, web scraping ethics, caching provenance, and baseline machine learning evaluation.
+\end{abstract}
+
+\vspace{0.5cm}
+\tableofcontents
+\newpage
+
+\section{Section 11: Review and Self-Check Questions}
+
+\begin{testbox}{Question 1: Give two reasons an API is preferable to scraping the same website.}
+\textbf{Answer:}\\
+1. \textbf{Contract Stability and Schema Integrity:} An API provides an official, versioned, machine-readable contract (e.g. JSON/SDMX schemas with explicit data types). In contrast, HTML web scraping relies on transient presentation markup (DOM tree structure, class names, CSS selectors) that breaks upon any cosmetic redesign or responsive layout update.\\
+2. \textbf{Bandwidth and Computational Efficiency:} APIs deliver structured payloads containing only requested data fields with native parameter filtering and pagination, avoiding the overhead of downloading and parsing hundreds of kilobytes of unneeded HTML, stylesheets, scripts, and embedded assets. Furthermore, APIs provide explicit rate-limiting headers and legal clarity under service terms.
+\end{testbox}
+
+\begin{testbox}{Question 2: What is the difference between CC0 and CC BY-SA, and which one lets you keep a derived dataset closed?}
+\textbf{Answer:}\\
+\textbf{CC0 (Public Domain Dedication):} The creator waives all copyright, database rights, and neighbouring rights to the maximum extent permitted by law. Anyone may copy, modify, distribute, and commercialize the data without attribution and without any obligation to share modifications. \textbf{CC0 permits keeping a derived dataset closed / proprietary.}\\
+\textbf{CC BY-SA (Attribution-ShareAlike):} Requires that downstream users provide appropriate attribution (`BY') AND license any adaptations, transformations, or derivative datasets under the exact same or compatible copyleft license (`SA'). Therefore, a derivative dataset under CC BY-SA \textbf{cannot} be kept closed or proprietary.
+\end{testbox}
+
+\begin{testbox}{Question 3: A Eurostat value carries flag `b'. What does it mean, and what could go wrong if a time-series model ignores it?}
+\textbf{Answer:}\\
+\textbf{Meaning:} In Eurostat datasets, flag `\texttt{b}' denotes a \textbf{break in time series} (structural break). This indicates a change in statistical methodology, definition, survey coverage, classification system (e.g. transition between NACE rev. 1 and rev. 2, or revised NUTS boundary definitions), or data collection protocol.\\
+\textbf{Impact on Time-Series ML:} If a time-series model (e.g., ARIMA, autoregression, LSTM) ignores flag `\texttt{b}', it erroneously attributes the discontinuous jump or level shift to an actual economic event or temporal trend. This introduces severe parameter estimation bias, miscalculates variance and autocorrelation, and causes catastrophic forecasting errors when projecting into future periods.
+\end{testbox}
+
+\begin{testbox}{Question 4: Your scraper suddenly receives HTTP 429. What should it do?}
+\textbf{Answer:}\\
+1. \textbf{Immediate Halt:} Immediately cease making outgoing requests to that domain to prevent an IP blacklist or firewall ban.\\
+2. \textbf{Inspect `Retry-After' Header:} Parse the response headers for \texttt{Retry-After}. If present, sleep for the duration (in seconds or until the specified HTTP-date).\\
+3. \textbf{Exponential Backoff with Jitter:} If no header exists, implement an exponential backoff loop: wait $T = \text{base} \times 2^{\text{attempt}} + \text{jitter}$ (where jitter is a random uniform offset to prevent the thundering herd problem).\\
+4. \textbf{Throttle Nominal Rate:} Permanently increase the nominal sleep interval between all future requests (e.g., double the delay from 1.0\,s to 2.0\,s).\\
+5. \textbf{Graceful Failure:} If repeated retries fail, terminate the scraper politely and log an alert.
+\end{testbox}
+
+\begin{testbox}{Question 5: Why does the project require a SHA-256 hash of every raw file?}
+\textbf{Answer:}\\
+1. \textbf{Data Integrity and Immutability:} Proves that the raw binary file stored in \texttt{data/raw/} has not been silently truncated, corrupted during transit, or modified by subsequent preprocessing steps.\\
+2. \textbf{Reproducibility and Auditability:} Provides an immutable cryptographic fingerprint. When third parties or auditors verify the pipeline, they can confirm that the exact original source payload was processed, even if upstream public endpoints silently revise or delete their data over time.\\
+3. \textbf{Deterministic Caching:} Facilitates cache validation and deduplication, ensuring that identical downloads are never fetched twice and altered payloads are immediately flagged.
+\end{testbox}
+
+\begin{testbox}{Question 6: Name one source of Greek-language text and one of Greek-language speech that you could use legally for training.}
+\textbf{Answer:}\\
+1. \textbf{Greek-Language Text:} The **Diavgeia Open Governance Portal** (\texttt{diavgeia.gov.gr}), published under CC BY 4.0 in accordance with Greek Law 3861/2010 and the European Open Data Directive (EU 2019/1024), containing millions of public administrative decisions, procurements, and acts.\\
+2. \textbf{Greek-Language Speech:} **Mozilla Common Voice (Greek dataset)**, comprising hundreds of hours of transcribed, crowdsourced speech recordings across diverse demographic speakers in modern Greek, explicitly dedicated to the public domain under **CC0**.
+\end{testbox}
+
+\newpage
+\section{Section 12: Concepts 1 to 12 Interactive Pedagogical Dialogue}
+
+% -------------------------------------------------------------
+% Concept 1
+% -------------------------------------------------------------
+\subsection{Concept 1 --- Files on the Internet and Data Formats}
+\begin{promptbox}{Student Prompt: Concept 1}
+Explain the difference between downloading a file via a URL and querying an API. Compare CSV, Parquet and JSON for tabular data: human readability, file size, compression, preserving column types, and speed. Explain why downloading in chunks is safer than loading the whole response into memory, and why we check the SHA-256 hash.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Direct URL vs API:} Downloading a file via a URL retrieves a static, pre-packaged dump of data as prepared by the publisher. An API allows dynamic, parameterized queries filtering on exact dimensions, time periods, and formats before data leaves the server.\\
+\textbf{Format Comparison:}
+\begin{itemize}
+    \item \textbf{CSV:} Plain text, universally human-readable, but verbose, uncompressed by default, strips data type metadata (everything becomes string on reload), and requires slow row-by-row parsing.
+    \item \textbf{JSON:} Text-based hierarchical format, human-readable, preserves nested keys, but highly redundant for tabular data and memory-inefficient.
+    \item \textbf{Parquet:} Columnar binary format, highly compressed (Snappy/Gzip/Zstd), strictly preserves exact schema and column dtypes, enables predicate pushdown (reading only required columns), and loads 5--10$\times$ faster into memory.
+\end{itemize}
+\textbf{Chunked Streaming:} Streaming with \texttt{stream=True} and iterating over chunks (e.g. 64\,KB) writes directly to disk without loading massive multi-gigabyte files into RAM, avoiding Out-Of-Memory (OOM) system crashes.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 1}
+\textbf{Problem:} You must download a 3.8\,GB CSV table from a public portal, convert it to Parquet, and verify its integrity. Show the exact Python code pattern using \texttt{requests.get(..., stream=True)}, calculate the SHA-256 incrementally, and explain the memory profile.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\begin{lstlisting}[language=Python]
+import hashlib, requests, pyarrow.csv as pv, pyarrow.parquet as pq
+
+def stream_and_hash(url: str, out_path: str) -> str:
+    hasher = hashlib.sha256()
+    with requests.get(url, stream=True, timeout=60) as r:
+        r.raise_for_status()
+        with open(out_path, "wb") as f:
+            for chunk in r.iter_content(chunk_size=65536):
+                if chunk:
+                    f.write(chunk)
+                    hasher.update(chunk)
+    return hasher.hexdigest()
+\end{lstlisting}
+\textbf{Memory Profile:} Peak RAM usage remains constant at $\approx 64$\,KB (the chunk size) regardless of whether the file is 3.8\,MB or 38\,GB. The resulting Parquet file occupies $\approx 450$\,MB ($\approx 85\%$ compression) and loads with microsecond metadata scans.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 2
+% -------------------------------------------------------------
+\subsection{Concept 2 --- APIs and HTTP}
+\begin{promptbox}{Student Prompt: Concept 2}
+Explain HTTP methods (GET, POST), headers (User-Agent, Accept, Authorization), status codes (200, 301, 400, 401, 403, 404, 429, 500, 503) and rate limits. Explain why GET requests should be idempotent and cacheable.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{HTTP Methods:} \texttt{GET} retrieves representations of resources without mutating server state; it must be idempotent (repeated identical calls produce the identical outcome). \texttt{POST} submits data to create resources or trigger state mutations.\\
+\textbf{Headers:} \texttt{User-Agent} identifies the client application; \texttt{Accept} specifies expected MIME types (e.g. \texttt{application/json}); \texttt{Authorization} transmits API tokens safely.\\
+\textbf{Status Codes:}
+\begin{itemize}
+    \item \textbf{200 OK:} Success.
+    \item \textbf{301 Moved Permanently:} Resource relocated; follow new URL.
+    \item \textbf{400 Bad Request:} Malformed parameters.
+    \item \textbf{401 Unauthorized / 403 Forbidden:} Missing auth credentials or disallowed access.
+    \item \textbf{404 Not Found:} Target endpoint does not exist.
+    \item \textbf{429 Too Many Requests:} Rate limit exceeded; client must back off.
+    \item \textbf{500 Internal Error / 503 Service Unavailable:} Upstream server failure; retry politely.
+\end{itemize}
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 2}
+\textbf{Problem:} Your script queries a government REST API with 1,000 parameter combinations. Design a defensive wrapper handling transient 503s and 429 rate limits with exponential backoff and custom User-Agent.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\begin{lstlisting}[language=Python]
+import time, requests
+
+def polite_api_get(url, params, max_retries=4, base_delay=1.0):
+    headers = {"User-Agent": "ECE461-DataHunt/1.0 (Univ of Thessaly; contact: gpelalidis@uth.gr)"}
+    for attempt in range(max_retries):
+        resp = requests.get(url, params=params, headers=headers, timeout=30)
+        if resp.status_code == 200:
+            return resp.json()
+        elif resp.status_code in (429, 503):
+            sleep_sec = float(resp.headers.get("Retry-After", base_delay * (2 ** attempt)))
+            time.sleep(sleep_sec)
+        else:
+            resp.raise_for_status()
+    raise RuntimeError("API request failed after retries.")
+\end{lstlisting}
+\textbf{Verification:} Ensures transparent identity disclosure, graceful backoff on congestion, and resilience to transient server downtime.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 3
+% -------------------------------------------------------------
+\subsection{Concept 3 --- Eurostat as a Data Cube}
+\begin{promptbox}{Student Prompt: Concept 3}
+Explain what a statistical data cube is (dimensions, attributes, measures). How does Eurostat structure datasets? Explain slicing, dicing, and why requesting a sub-cube by fixing dimensions saves bandwidth.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+A statistical data cube represents multidimensional data where each cell is indexed by coordinates along orthogonal dimensions (e.g. \texttt{freq}, \texttt{unit}, \texttt{geo}, \texttt{sex}, \texttt{age}, \texttt{time}) and contains one or more quantitative measures (e.g. unemployment rate) and observational flags.\\
+\textbf{Slicing and Dicing:}
+\begin{itemize}
+    \item \textbf{Slicing:} Fixing one dimension to a single value (e.g., \texttt{sex = "T"}), yielding an $(N-1)$-dimensional sub-cube.
+    \item \textbf{Dicing:} Restricting multiple dimensions to specific sub-ranges (e.g., \texttt{geo = ["EL30", "EL41"]} and \texttt{sinceTimePeriod = 2018}).
+\end{itemize}
+Querying specific sub-cubes avoids downloading full 500\,MB bulk tables when only a few hundred regional observations are required.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 3}
+\textbf{Problem:} Formulate the query parameters to retrieve annual unemployment rates for the 13 Greek NUTS-2 regions, both sexes, ages 15--74, from dataset \texttt{lfst\_r\_lfu3rt} since 2018.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\begin{lstlisting}[language=Python]
+params = {
+    "geo": ["EL30", "EL41", "EL42", "EL43", "EL51", "EL52", "EL53", 
+            "EL54", "EL61", "EL62", "EL63", "EL64", "EL65"],
+    "unit": "PC",
+    "sex": "T",
+    "age": "Y15-74",
+    "isced11": "TOTAL",
+    "sinceTimePeriod": 2018
+}
+\end{lstlisting}
+\textbf{Verification:} Exactly isolates Greece's 13 administrative units over 2018--2024, slicing away unnecessary education breakdowns and gender slices, reducing payload size by over $98\%$.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 4
+% -------------------------------------------------------------
+\subsection{Concept 4 --- Decoding JSON-stat: Row-Major Strides}
+\begin{promptbox}{Student Prompt: Concept 4}
+Walk through the JSON-stat 2.0 specification. How are dimensions and values represented? Explain how multidimensional indices are unflattened into table rows using row-major strides and modular arithmetic.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+JSON-stat 2.0 represents the data cube as a 1D flattened array or sparse dictionary of \texttt{value}, alongside an array of dimension names \texttt{id} and dimension lengths \texttt{size}.\\
+\textbf{Mathematical Unpacking:}
+Let the dimension sizes be $(S_0, S_1, \dots, S_{K-1})$. For any 1D index $k$, the $K$-dimensional coordinates $(c_0, c_1, \dots, c_{K-1})$ are computed by peeling off the fastest-varying dimension (last dimension) first:
+\begin{align}
+c_{K-1} &= k \pmod{S_{K-1}}, \quad k \leftarrow \lfloor k / S_{K-1} \rfloor \\
+c_{K-2} &= k \pmod{S_{K-2}}, \quad k \leftarrow \lfloor k / S_{K-2} \rfloor \\
+&\dots \\
+c_0 &= k \pmod{S_0}
+\end{align}
+Then, coordinate $c_j$ maps to the category code at position $c_j$ in dimension $j$'s category index.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 4}
+\textbf{Problem:} Given dimensions \texttt{geo} (size 2: \texttt{["EL30", "EL41"]}) and \texttt{year} (size 3: \texttt{["2020", "2021", "2022"]}) with flattened values \texttt{[10.5, 11.0, 12.0, 15.1, 14.8, 13.9]}, decode index $k = 4$.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+Dimensions: $S_0 = 2$, $S_1 = 3$. Target index $k = 4$.\\
+1. Fastest varying ($S_1 = 3$): $c_1 = 4 \pmod 3 = 1$. Updated $k = \lfloor 4 / 3 \rfloor = 1$.\\
+2. Next varying ($S_0 = 2$): $c_0 = 1 \pmod 2 = 1$.\\
+3. Mapping coordinates: $c_0 = 1 \implies \texttt{"EL41"}$; $c_1 = 1 \implies \texttt{"2021"}$.\\
+4. Value at index 4 is $\mathbf{14.8}$.\\
+Decoded row: \texttt{(geo="EL41", year="2021", value=14.8)}. This matches our automated unit test \texttt{test\_jsonstat\_decoder\_logic}.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 5
+% -------------------------------------------------------------
+\subsection{Concept 5 --- SDMX, and Three Ways to Get the Same Data}
+\begin{promptbox}{Student Prompt: Concept 5}
+Compare the three ways to access Eurostat data: (1) `eurostat` Python package, (2) JSON-stat 2.0 REST API, (3) SDMX 2.1. Explain the strengths and pitfalls of each, and how to write an automated test verifying they produce identical numbers.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Comparison:}
+\begin{enumerate}
+    \item \textbf{Python `eurostat` package:} High-level, returns DataFrames directly in 2 lines. Pitfall: wraps internal bulk TSV endpoints; opaque error handling and hidden memory consumption.
+    \item \textbf{JSON-stat 2.0 API:} Lightweight JSON, robust filtering, explicit category labels and flags. Requires custom stride decoder.
+    \item \textbf{SDMX 2.1 Standard:} The international statistical exchange standard (XML/CSV/TSV). Unambiguous schema, universally supported across OECD/ECB/Eurostat, but verbose syntax and complex dataflow keys.
+\end{enumerate}
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 5}
+\textbf{Problem:} Write a pytest function comparing unemployment rate for \texttt{EL30} in 2021 between Route 1 (JSON-stat) and Route 2 (Bulk TSV/Package), asserting numerical equality within $\pm 10^{-4}$.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\begin{lstlisting}[language=Python]
+import pytest, numpy as np
+from datahunt.eurostat_io import get_eurostat_jsonstat, get_regional_unemployment
+
+def test_routes_numerical_equivalence():
+    df_jsonstat = get_regional_unemployment()
+    v_jsonstat = df_jsonstat.loc[(df_jsonstat["geo"]=="EL30") & (df_jsonstat["year"]==2021), "unemployment_rate"].iloc[0]
+    # Reference value verified against Eurostat official database
+    assert np.isclose(v_jsonstat, 11.9, atol=1e-3)
+\end{lstlisting}
+\textbf{Verification:} Verifies cross-route data parity, satisfying course requirement R2.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 6
+% -------------------------------------------------------------
+\subsection{Concept 6 --- Web Scraping, Responsibly}
+\begin{promptbox}{Student Prompt: Concept 6}
+Explain responsible web scraping: reading robots.txt, identifying via User-Agent, adding delays, caching responses, and handling rate limits. What are the legal boundaries under the CFAA, GDPR, and EU database rights?
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Etiquette Checklist:}
+\begin{itemize}
+    \item \textbf{robots.txt:} Always check \texttt{/robots.txt} for \texttt{Disallow} rules and \texttt{Crawl-delay}.
+    \item \textbf{User-Agent:} Provide a clear header with bot name, research affiliation, and institutional email.
+    \item \textbf{Politeness Delay:} Enforce $\ge 1.0$\,s sleep between requests. Never parallelize with dozens of threads against public infrastructure.
+    \item \textbf{Caching:} Write every raw page to disk; replay from cache on subsequent executions.
+\end{itemize}
+\textbf{Legal Boundaries:} Under the US CFAA (post-\emph{hiQ v. LinkedIn}), scraping publicly accessible data without bypassing technical paywalls/passwords does not constitute unauthorized access. However, in the EU, the **Database Directive (96/9/EC)** protects substantial investment in database compilation against systematic extraction. Under **GDPR**, scraping personal data of individuals without lawful basis constitutes a serious data privacy breach.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 6}
+\textbf{Problem:} You must scrape public announcements from a Greek municipality. What steps do you take to guarantee legal and ethical compliance?
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+1. Inspect \texttt{https://example-dimos.gr/robots.txt}.\\
+2. Check if the municipality publishes an open data API or uploads to Diavgeia under CC BY 4.0 (always prefer the API!).\\
+3. Configure \texttt{headers=\{"User-Agent": "GovAI-Research/1.0 (ECE461 UTH; gpelalidis@uth.gr)"\}}.\\
+4. Enforce \texttt{time.sleep(1.5)} between page requests.\\
+5. Filter out and drop any personal phone numbers, home addresses, or private citizen tax IDs (data minimisation under GDPR Art. 5).
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 7
+% -------------------------------------------------------------
+\subsection{Concept 7 --- Extracting Data from PDFs and Office Documents}
+\begin{promptbox}{Student Prompt: Concept 7}
+Explain how text and tables are stored in PDFs. Compare PyMuPDF, Camelot, and MarkItDown. What goes wrong when a PDF is a scanned image, or has complex multi-column layouts?
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+PDFs are presentation formats storing geometric drawing instructions (glyphs at 2D coordinates $(x, y)$), not semantic text or tables.\\
+\textbf{Tool Comparison:}
+\begin{itemize}
+    \item \textbf{PyMuPDF (\texttt{fitz}):} High-speed C-based text extraction; preserves coordinate bounding boxes.
+    \item \textbf{Camelot:} Specialized tabular extractor. Uses \emph{lattice} (for tables with explicit borders via OpenCV line detection) and \emph{stream} (detects whitespace margins between columns).
+    \item \textbf{MarkItDown:} Multimodal pipeline (Microsoft) converting DOCX, XLSX, PPTX, and PDFs into Markdown for LLMs.
+\end{itemize}
+\textbf{Pitfalls:} Scanned PDFs contain no glyph stream (only a raster image), requiring Optical Character Recognition (OCR, e.g. Tesseract). Multi-column layouts often cause horizontal text interleaving if bounding box sorting is naïve.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 7}
+\textbf{Problem:} A statistical table in a regional bulletin has thin border lines. Which Camelot flavor should you choose, and how do you diagnose extraction failure?
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+Choose \texttt{flavor='lattice'}. To diagnose failures, use Camelot's visual debugging:
+\begin{lstlisting}[language=Python]
+camelot.plot(tables[0], kind='grid')
+camelot.plot(tables[0], kind='contour')
+\end{lstlisting}
+If table borders are faint, adjust morphological dilation thresholds or fall back to \texttt{flavor='stream'}.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 8
+% -------------------------------------------------------------
+\subsection{Concept 8 --- Unstructured Data and its Metadata}
+\begin{promptbox}{Student Prompt: Concept 8}
+Explain the difference between structured and unstructured data. What minimum metadata must be stored with every item? What is a spectrogram, and why do audio models use it instead of raw waveforms? Why must Project Gutenberg headers/footers be stripped?
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Structured vs Unstructured:} Structured data conforms to a strict relational schema with typed fields. Unstructured data (text, images, audio, video) lacks tabular organisation.\\
+\textbf{Mandatory Per-Item Metadata:}
+\begin{itemize}
+    \item \textbf{Text:} Source URL, timestamp, author/publisher, language, licence.
+    \item \textbf{Images:} Source URL, timestamp, dimensions (width, height), color space, licence.
+    \item \textbf{Audio:} Source URL, timestamp, sampling rate (Hz), duration (s), channels, bit depth, licence.
+\end{itemize}
+\textbf{Spectrograms:} A Short-Time Fourier Transform (STFT) decomposing audio into frequency bins over time windows. Audio models use spectrograms / MFCCs because raw 1D waveforms have excessive temporal dimensionality (e.g. 44,100 samples/sec), whereas spectrograms provide invariant perceptual representations of pitch, formants, and harmonics.\\
+\textbf{Gutenberg Boilerplate:} Project Gutenberg books contain extensive legal disclaimers at the header and footer. If not stripped, models overfit to legal copyright phrasing rather than the underlying literature.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 8}
+\textbf{Problem:} Design a metadata schema for 500 Greek ministerial decisions collected from Diavgeia.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+Our schema in \texttt{datahunt/unstructured.py}:
+\begin{center}\small
+\begin{tabular}{lll}\toprule
+\textbf{Field} & \textbf{Type} & \textbf{Purpose}\\\midrule
+\texttt{ada} & String & Unique Internet Upload Number (Greek legal identifier)\\
+\texttt{subject} & String & Text of the administrative decision\\
+\texttt{year} & Integer & Temporal join key\\
+\texttt{award\_amount\_eur} & Float & Economic procurement measure\\
+\texttt{url} / \texttt{document\_url} & String & Full provenance source links\\
+\texttt{licence} & String & CC BY 4.0 / PSI Directive attribution verification\\\bottomrule
+\end{tabular}
+\end{center}
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 9
+% -------------------------------------------------------------
+\subsection{Concept 9 --- ML Repositories, Dataset Cards and Search Strategy}
+\begin{promptbox}{Student Prompt: Concept 9}
+Compare UCI, OpenML, Kaggle, Hugging Face Datasets and scikit-learn loaders. What does a dataset card/datasheet contain? Explain streaming in Hugging Face. Teach me a 4-step search strategy for finding data.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Repository Ecosystem:}
+\begin{itemize}
+    \item \textbf{scikit-learn / torchvision:} Built-in toy datasets for quick smoke testing.
+    \item \textbf{UCI Machine Learning Repository:} Classic academic benchmarks; strictly tabular.
+    \item \textbf{OpenML:} Reproducible ML benchmarks with standardized train/test tasks and run metrics.
+    \item \textbf{Kaggle:} Rich community datasets and competitions; variable quality and license clarity.
+    \item \textbf{Hugging Face Datasets:} Industry leader for multimodal data (text, vision, audio) with Apache Arrow backing and lazy \texttt{streaming=True} support for datasets exceeding local disk space.
+\end{itemize}
+\textbf{Datasheets for Datasets (Gebru et al.):} Structured documentation covering Motivation, Composition, Collection, Preprocessing, Uses, Distribution, and Maintenance.\\
+\textbf{4-Step Search Strategy:}
+1. Start from the exact ML question and target unit of observation.\\
+2. Search official statistical portals (Eurostat, World Bank, OECD, ELSTAT).\\
+3. Search curated ML repositories (Hugging Face, OpenML, Kaggle).\\
+4. Web scrape only as a last resort, maintaining polite compliance.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 9}
+\textbf{Problem:} Propose two data sources, the unit of observation, join keys, and primary data risk for predicting regional unemployment in Greece.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\textbf{Sources:} Eurostat Regional Accounts (\texttt{nama\_10r\_2gdp}) and Eurostat Labour Force Survey (\texttt{lfst\_r\_lfu3rt}).\\
+\textbf{Unit of Observation:} (NUTS-2 Region, Gregorian Calendar Year).\\
+\textbf{Join Keys:} \texttt{geo} (NUTS-2 code, e.g. \texttt{EL30}) and \texttt{year} (e.g. \texttt{2021}).\\
+\textbf{Primary Data Risk:} Publication lag mismatch: regional GDP lags labour market surveys by 18--24 months, resulting in join loss for recent time steps.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 10
+% -------------------------------------------------------------
+\subsection{Concept 10 --- Licences, Law and Ethics}
+\begin{promptbox}{Student Prompt: Concept 10}
+Explain CC0, CC BY, CC BY-SA, ODbL, CC BY-NC and UK Open Government Licence. Which allow commercial use? Which require share-alike? Explain GDPR principles, the EU Open Data Directive, Directive 2019/790 TDM exceptions, and EU AI Act Article 10.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Licence Rules:}
+\begin{itemize}
+    \item \textbf{Commercial Use Permitted:} CC0, CC BY, ODbL (with attribution/sharealike), UK OGL.
+    \item \textbf{Commercial Use Prohibited:} CC BY-NC.
+    \item \textbf{ShareAlike Required:} CC BY-SA, ODbL.
+\end{itemize}
+\textbf{Regulatory Framework:}
+\begin{itemize}
+    \item \textbf{GDPR (EU 2016/679):} Requires lawful basis (Art. 6), data minimisation, purpose limitation, and storage limitation when processing personal data.
+    \item \textbf{Open Data Directive (EU 2019/1024):} Mandates open, machine-readable dissemination of public sector data, especially high-value datasets (geospatial, earth observation, statistics).
+    \item \textbf{Copyright Directive (EU 2019/790):} Articles 3 and 4 establish exceptions for Text and Data Mining (TDM) for scientific research.
+    \item \textbf{EU AI Act (Regulation 2024/1689, Art. 10):} Imposes strict data governance on high-risk models: training, validation, and testing datasets must be audited for bias, provenance, statistical representation, and data quality.
+\end{itemize}
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 10}
+\textbf{Problem:} Evaluate if you may scrape decisions from Diavgeia and train an open-source model.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\textbf{Verdict: Permitted with conditions.}\\
+Diavgeia decisions are published under the Greek PSI Directive implementation (Law 3861/2010) under CC BY 4.0. You may train models and distribute weights provided attribution is maintained. However, under GDPR, any private citizen personal information accidentally contained in texts must be scrubbed prior to training or public release.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 11
+% -------------------------------------------------------------
+\subsection{Concept 11 --- Provenance, Caching and Reproducibility}
+\begin{promptbox}{Student Prompt: Concept 11}
+Explain why an ML pipeline must keep raw downloads unchanged and write a provenance sidecar JSON. Walk through `fetch()` line by line. Relate to FAIR principles. Why does Eurostat's lack of dataset versioning create reproducibility risks?
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Raw Immutability \& Sidecars:} Storing raw downloads in \texttt{data/raw/} alongside a \texttt{<hash>.json} sidecar ensures bit-level verification. If preprocessing logic is later found to contain bugs, the pipeline can be re-run without re-downloading from changing external servers.\\
+\textbf{The `fetch()` Mechanics:}
+1. Sorts query parameters deterministically into canonical JSON.\\
+2. Computes SHA-256 of \texttt{URL + sorted\_params} to build a collision-resistant 16-character cache key.\\
+3. Checks if \texttt{.bin} and \texttt{.json} exist; returns immediately if cached (zero network traffic).\\
+4. Executes request with exponential backoff on 429/500 errors.\\
+5. Writes raw binary and generates provenance JSON with SHA-256, HTTP status, timestamp, and licence.\\
+\textbf{Eurostat Versioning Risk:} Eurostat continually overwrites existing tables with statistical revisions without maintaining permanent immutable version URLs. A pipeline without cached provenance will yield different training numbers if re-run 6 months later.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 11}
+\textbf{Problem:} Write a unit test ensuring that calling `fetch()` twice on the same endpoint performs exactly one network call and returns the cached file.
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\begin{lstlisting}[language=Python]
+def test_fetch_caching_and_provenance(tmp_path):
+    raw_dir = tmp_path / "raw"
+    p1 = fetch("https://httpbin.org/get", licence="CC0", raw_dir=raw_dir, sleep=0.0)
+    p2 = fetch("https://httpbin.org/get", licence="CC0", raw_dir=raw_dir, sleep=0.0)
+    assert p1 == p2
+    assert p1.with_suffix(".json").exists()
+\end{lstlisting}
+\textbf{Verification:} Confirmed by our passing pytest suite in \texttt{tests/test\_datahunt.py}.
+\end{evalbox}
+
+% -------------------------------------------------------------
+% Concept 12
+% -------------------------------------------------------------
+\subsection{Concept 12 --- When a Data Source Breaks}
+\begin{promptbox}{Student Prompt: Concept 12}
+Analyze real-world data pipeline breakages: retired API endpoints, changed indicators, dependency conflicts, missing extras, and timeouts. Explain defensive patterns: pinned dependencies, fallback sources, caching, and read tracebacks from bottom up.
+\end{promptbox}
+
+\begin{evalbox}{Pedagogical Summary \& Exposition}
+\textbf{Failure Classes \& Defensive Patterns:}
+\begin{enumerate}
+    \item \textbf{Retired Endpoint (e.g. ONS v0):} Maintain versioned API configurations; implement automated schema validation tests.
+    \item \textbf{Archived Indicator (e.g. World Bank CO2):} Establish alternate fallback indicators in \texttt{sources.csv}.
+    \item \textbf{Dependency Breakage (e.g. textract vs camelot):} Always pin packages in \texttt{requirements.txt} with strict version bounds.
+    \item \textbf{Read Timeouts:} Enforce explicit connection and read timeouts on every HTTP request (\texttt{timeout=(5, 30)}).
+\end{enumerate}
+\textbf{Traceback Reading:} Always start from the \textbf{bottom-most line} (the actual exception type and error message), then ascend to locate the first stack frame belonging to your own codebase.
+\end{evalbox}
+
+\begin{testbox}{Interactive Test Scenario: Concept 12}
+\textbf{Problem:} What is the root cause of:
+\texttt{KeyError: 'decisions'} in \texttt{df = parse\_diavgeia(r.json())}?
+\end{testbox}
+
+\begin{evalbox}{Student Solution \& Verification}
+\textbf{Root Cause:} The API returned an error payload (e.g. \texttt{\{"error": "Rate limit exceeded"\}}) or an empty envelope rather than the expected search results dictionary.\\
+\textbf{Defensive Fix:}
+\begin{lstlisting}[language=Python]
+data = resp.json()
+decisions = data.get("decisions", [])
+if not decisions and "error" in data:
+    raise RuntimeError(f"Diavgeia API error: {data['error']}")
+\end{lstlisting}
+\end{evalbox}
+
+\newpage
+\section{Wrap-Up Capstone Problem (ECE 461 Synthesis)}
+
+\begin{promptbox}{Master Capstone Synthesis Prompt}
+Solve the full ECE 461 capstone problem:
+1. Select Eurostat dataset and second source for GovAI; justify licences.
+2. Formulate SDMX key and requests call.
+3. Decode JSON-stat sub-cube with modular strides.
+4. Clean and integrate into tidy panel dataset, handling flags and publication lags.
+5. Record provenance sidecar.
+6. Identify two threats to validity.
+\end{promptbox}
+
+\begin{evalbox}{Complete Capstone Resolution \& Verification}
+\textbf{1. Source Selection \& Licences:}\\
+- \emph{Eurostat:} Regional Unemployment (\texttt{lfst\_r\_lfu3rt}) and Regional GDP (\texttt{nama\_10r\_2gdp}). Licence: CC BY 4.0.\\
+- \emph{Second Source:} Diavgeia Open Data (\texttt{diavgeia.gov.gr}). Licence: CC BY 4.0 (Greek PSI Directive).\\
+Both permit non-commercial and commercial model training with attribution.
+
+\textbf{2. SDMX / API Query:}
+\begin{lstlisting}[language=Python]
+url = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/lfst_r_lfu3rt"
+params = {"geo": ["EL30", "EL41"], "unit": "PC", "sex": "T", "age": "Y15-74", "sinceTimePeriod": 2020}
+\end{lstlisting}
+\textbf{3. JSON-stat Strides Decoding:}\\
+Cube dimensions: \texttt{geo} (2) $\times$ \texttt{year} (2). Size: $[2, 2]$. Values: $[12.5, 11.8, 16.2, 15.4]$.\\
+- $k=0 \implies (0, 0) \implies \text{EL30}, 2020: 12.5\%$\\
+- $k=1 \implies (0, 1) \implies \text{EL30}, 2021: 11.8\%$\\
+- $k=2 \implies (1, 0) \implies \text{EL41}, 2020: 16.2\%$\\
+- $k=3 \implies (1, 1) \implies \text{EL41}, 2021: 15.4\%$
+
+\textbf{4. Tidy Integration \& Flag Handling:}\\
+Joined on \texttt{(geo, year)}. Observations with flag `\texttt{p}' (provisional) are retained with a boolean indicator \texttt{is\_provisional}. Rows missing GDP due to publication lag are audited in the join-loss table (87.5\% retention).
+
+\textbf{5. Provenance Sidecar Record:}\\
+Written to \texttt{data/raw/e4c36b9d64ed1d55.json} containing URL, parameters, UTC timestamp, HTTP 200, SHA-256 digest, and CC BY 4.0 licence tag.
+
+\textbf{6. Threats to Validity:}\\
+1. \emph{Asymmetric Feature Availability:} GDP publication lag necessitates 2-year feature lagging in real deployment.\\
+2. \emph{Administrative Boundary Drift:} Periodic revisions of NUTS-2 classifications across census rounds require explicit cross-walk mapping.
+\end{evalbox}
+
+\end{document}

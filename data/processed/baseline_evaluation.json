@@ -1,0 +1,38 @@
+{
+  "split_config": {
+    "split_year": 2022,
+    "train_observations": 52,
+    "test_observations": 39,
+    "train_years": [
+      2018,
+      2019,
+      2020,
+      2021
+    ],
+    "test_years": [
+      2022,
+      2023,
+      2024
+    ]
+  },
+  "models": {
+    "ridge_regression": {
+      "mae": 5.4427,
+      "rmse": 6.0926,
+      "r2": -4.303,
+      "mae_95_ci": [
+        4.5672,
+        6.3
+      ],
+      "rmse_95_ci": [
+        5.1947,
+        6.9033
+      ]
+    },
+    "random_forest": {
+      "mae": 5.6812,
+      "rmse": 6.476,
+      "r2": -4.9914
+    }
+  }
+}

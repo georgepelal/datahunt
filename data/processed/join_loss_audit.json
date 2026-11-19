@@ -1,0 +1,34 @@
+{
+  "initial_unemployment_rows": 104,
+  "join_1_eurostat_gdp": {
+    "left_rows": 104,
+    "right_rows": 91,
+    "merged_rows": 91,
+    "rows_lost": 13,
+    "pct_retained": 87.5
+  },
+  "join_2_world_bank": {
+    "left_rows": 91,
+    "right_rows": 35,
+    "merged_rows": 91,
+    "rows_lost": 0,
+    "pct_retained": 100.0
+  },
+  "governance_nlp_stats": {
+    "total_decisions_sampled": 500,
+    "total_award_amount_eur": 4685243.07,
+    "mean_award_amount_eur": 9370.48614,
+    "top_text_features": [
+      "tfidf_2020",
+      "tfidf_2026",
+      "tfidf_4759",
+      "tfidf_\u03b1\u03b4\u03b5\u03b9\u03b1\u03c2",
+      "tfidf_\u03b4\u03bf\u03bc\u03b7\u03c3\u03b7\u03c2",
+      "tfidf_\u03b5\u03bd\u03b7\u03bc\u03b5\u03c1\u03c9\u03c3\u03b7",
+      "tfidf_\u03b5\u03c1\u03b3\u03b1\u03c3\u03b9\u03b5\u03c2",
+      "tfidf_\u03b5\u03c1\u03b3\u03b1\u03c3\u03b9\u03c9\u03bd",
+      "tfidf_\u03ba\u03bb\u03b9\u03bc\u03b1\u03ba\u03b1\u03c2",
+      "tfidf_\u03bc\u03b9\u03ba\u03c1\u03b7\u03c2"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "url": "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_60M_2021_4326_LEVL_2.geojson",
+  "requested_url": "https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/NUTS_RG_60M_2021_4326_LEVL_2.geojson",
+  "params": null,
+  "retrieved_at": "2026-10-02T15:58:00.783154+00:00",
+  "status": 200,
+  "content_type": "application/geo+json",
+  "sha256": "8132f741fa7feb44e61406540134884ec63487f579e74657339ec64b145cbf59",
+  "bytes": 434283,
+  "licence": "CC BY 4.0 (Eurostat GISCO)"
+}

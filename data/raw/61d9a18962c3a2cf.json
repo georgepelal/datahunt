@@ -1,0 +1,14 @@
+{
+  "url": "https://api.worldbank.org/v2/country/GRC/indicator/SL.UEM.TOTL.ZS?format=json&per_page=100",
+  "requested_url": "https://api.worldbank.org/v2/country/GRC/indicator/SL.UEM.TOTL.ZS",
+  "params": {
+    "format": "json",
+    "per_page": "100"
+  },
+  "retrieved_at": "2026-10-02T15:54:32.266592+00:00",
+  "status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "sha256": "e15a930f120bb9ca7fa17463b42eda4e3acf38685f6941019f2094db659d3c3d",
+  "bytes": 16255,
+  "licence": "CC BY 4.0 (World Bank Open Data)"
+}
