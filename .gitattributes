@@ -1,0 +1,4 @@
+# Exclude LaTeX reports and documentation from language statistics
+report/** linguist-documentation
+*.tex linguist-detectable=false
+*.bib linguist-detectable=false
