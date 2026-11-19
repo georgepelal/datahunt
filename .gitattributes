@@ -1,7 +1,7 @@
-# Exclude LaTeX reports and documentation from repository language statistics
-report/* linguist-documentation
+# Exclude LaTeX reports, TeX and bib files from repository language statistics
 report/** linguist-documentation
-*.tex -linguist-detectable
+report/** linguist-vendored
 *.tex linguist-documentation
-*.bib -linguist-detectable
+*.tex linguist-vendored
 *.bib linguist-documentation
+*.bib linguist-vendored
